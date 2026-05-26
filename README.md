@@ -12,6 +12,15 @@ Windows 桌面翻译工具，基于 PySide6 构建。支持迷你悬浮窗和完
 - **历史记录** — 翻译自动存档，支持搜索，超过 3 天自动清理
 - **全局快捷键** — 系统级热键，任何界面都可触发
 
+迷你悬浮窗具体样式：
+
+<img width="420" height="400" alt="image" src="https://github.com/user-attachments/assets/5a4aabc6-6dbd-428e-9cc0-a3a861c51d5e" />
+
+当你启动该工具并且将窗口浮现时，直接ctrl+c复制文字，可以实时自动注入到翻译工具中翻译，不需要进行粘贴
+
+<img width="635" height="443" alt="image" src="https://github.com/user-attachments/assets/96cb4651-5849-4b6b-9994-a8ca632fca79" />
+
+
 ## 安装
 
 ```bash
