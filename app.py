@@ -11,7 +11,7 @@ from PySide6.QtGui import QIcon
 
 from config_manager import ConfigManager
 from translators.manager import TranslatorManager
-from ocr import BaiduOCR
+from ocr import OCRManager
 from clipboard_monitor import ClipboardMonitor
 from hotkey_manager import HotkeyManager
 from history_manager import HistoryManager
@@ -27,9 +27,8 @@ class App(QObject):
         # 初始化组件
         self.config = ConfigManager()
         self.translator_manager = TranslatorManager(self.config)
-        self.ocr_engine_obj = BaiduOCR()
+        self.ocr_manager = OCRManager(self.config)
         self.history_manager = HistoryManager(self.config.get("data_dir"))
-        self._refresh_ocr_credentials()
 
         # 图标（从 main.py 传入，已设置为全局应用图标）
         self.app_icon = app_icon
@@ -177,9 +176,12 @@ class App(QObject):
             self.mini_window.activateWindow()
 
     def _show_main_window(self):
-        self.main_window.show()
-        self.main_window.raise_()
-        self.main_window.activateWindow()
+        if self.main_window.isVisible():
+            self.main_window.hide()
+        else:
+            self.main_window.show()
+            self.main_window.raise_()
+            self.main_window.activateWindow()
 
     def _show_history(self):
         if self.history_window is None:
@@ -187,6 +189,8 @@ class App(QObject):
             self.history_window.setWindowFlags(
                 self.history_window.windowFlags() | Qt.WindowStaysOnTopHint
             )
+        if self.history_window.isMinimized():
+            self.history_window.showNormal()
         self.history_window.show()
         self.history_window.raise_()
         self.history_window.activateWindow()
@@ -222,7 +226,8 @@ class App(QObject):
 
     def _open_settings(self):
         if self.settings_window is not None:
-            # 设置窗口已打开，提到最前
+            if self.settings_window.isMinimized():
+                self.settings_window.showNormal()
             self.settings_window.raise_()
             self.settings_window.activateWindow()
             return
@@ -230,7 +235,7 @@ class App(QObject):
         self.settings_window = SettingsWindow(
             self.config,
             self.translator_manager,
-            self.ocr_engine_obj,
+            self.ocr_manager,
             icon=self.app_icon,
         )
         self.settings_window.setModal(False)  # 非模态，不阻塞其他窗口
@@ -247,7 +252,6 @@ class App(QObject):
         self.settings_window = None
 
     def _on_settings_saved(self):
-        self._refresh_ocr_credentials()
         # 同步数据目录
         data_dir = self.config.get("data_dir")
         self.history_manager.set_data_dir(data_dir)
@@ -404,7 +408,8 @@ class App(QObject):
         self._restore_windows_after_screenshot()
 
     def _on_screenshot_taken(self, image_bytes):
-        if not self.ocr_engine_obj.is_available():
+        engine = self.ocr_manager.get_engine()
+        if not engine.is_available():
             show_modal(
                 None, QMessageBox.Warning,
                 "OCR 未配置",
@@ -426,7 +431,7 @@ class App(QObject):
         self.mini_window.set_status("OCR 识别中...")
 
         def work():
-            ok, result = self.ocr_engine_obj.recognize(image_bytes)
+            ok, result = engine.recognize(image_bytes)
             if ok and result:
                 self._ocr_done.emit(result)
             else:
@@ -450,11 +455,6 @@ class App(QObject):
     # ================================================================
     # 辅助方法
     # ================================================================
-    def _refresh_ocr_credentials(self):
-        ocr_config = self.config.get("ocr.baidu", {})
-        self.ocr_engine_obj.api_key = ocr_config.get("api_key", "")
-        self.ocr_engine_obj.secret_key = ocr_config.get("secret_key", "")
-
     def _quit(self):
         self.hotkey_manager.unregister_all()
         self.executor.shutdown(wait=False)

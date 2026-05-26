@@ -3,7 +3,7 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QGroupBox, QTabWidget, QWidget,
-    QMessageBox, QGridLayout, QFileDialog, QApplication,
+    QMessageBox, QGridLayout, QFileDialog, QApplication, QComboBox,
 )
 from PySide6.QtCore import Qt, Signal, QEvent
 from PySide6.QtGui import QKeySequence
@@ -137,11 +137,11 @@ class HotkeyCaptureLine(QWidget):
 class SettingsWindow(QDialog):
     settings_saved = Signal()
 
-    def __init__(self, config_manager, translator_manager, ocr_engine, icon=None):
+    def __init__(self, config_manager, translator_manager, ocr_manager, icon=None):
         super().__init__()
         self.config = config_manager
         self.translator_manager = translator_manager
-        self.ocr_engine = ocr_engine
+        self.ocr_manager = ocr_manager
         self._modified_hotkeys = {}
         self._init_ui()
         self._load_config()
@@ -235,48 +235,13 @@ class SettingsWindow(QDialog):
         ocr_layout.setSpacing(16)
         ocr_layout.setContentsMargins(12, 12, 12, 12)
 
-        ocr_group = QGroupBox("百度 OCR（截图翻译文字识别）")
-        ocr_layout_inner = QVBoxLayout()
-        ocr_layout_inner.setSpacing(10)
-
         ocr_info = QLabel(
-            "在 ai.baidu.com 开通「通用文字识别」服务后，"
-            "在百度智能云控制台获取 API Key 和 Secret Key。"
+            "Windows 系统 OCR，免费使用，无需配置。\n"
+            "确保系统已安装中文语言包即可正常识别中英文。"
         )
         ocr_info.setObjectName("hintLabel")
         ocr_info.setWordWrap(True)
-        ocr_layout_inner.addWidget(ocr_info)
-
-        ocr_grid = QGridLayout()
-        ocr_grid.setSpacing(8)
-        ocr_grid.setColumnStretch(1, 1)
-
-        ocr_api_label = QLabel("API Key")
-        ocr_api_label.setMinimumWidth(80)
-        self.ocr_api_key = QLineEdit()
-        self.ocr_api_key.setPlaceholderText("请输入百度 OCR API Key")
-        ocr_grid.addWidget(ocr_api_label, 0, 0)
-        ocr_grid.addWidget(self.ocr_api_key, 0, 1)
-
-        ocr_secret_label = QLabel("Secret Key")
-        self.ocr_secret = QLineEdit()
-        self.ocr_secret.setPlaceholderText("请输入百度 OCR Secret Key")
-        self.ocr_secret.setEchoMode(QLineEdit.Password)
-        ocr_grid.addWidget(ocr_secret_label, 1, 0)
-        ocr_grid.addWidget(self.ocr_secret, 1, 1)
-
-        ocr_layout_inner.addLayout(ocr_grid)
-
-        ocr_btn_row = QHBoxLayout()
-        self.ocr_test_btn = QPushButton("测试连接")
-        self.ocr_test_btn.setObjectName("accentBtn")
-        self.ocr_test_btn.clicked.connect(self._test_ocr)
-        ocr_btn_row.addWidget(self.ocr_test_btn)
-        ocr_btn_row.addStretch()
-        ocr_layout_inner.addLayout(ocr_btn_row)
-
-        ocr_group.setLayout(ocr_layout_inner)
-        ocr_layout.addWidget(ocr_group)
+        ocr_layout.addWidget(ocr_info)
         ocr_layout.addStretch()
 
         ocr_tab.setLayout(ocr_layout)
@@ -445,25 +410,17 @@ class SettingsWindow(QDialog):
         self.baidu_app_id.setText(baidu.get("app_id", ""))
         self.baidu_secret_key.setText(baidu.get("secret_key", ""))
 
-        ocr = self.config.get("ocr.baidu", {})
-        self.ocr_api_key.setText(ocr.get("api_key", ""))
-        self.ocr_secret.setText(ocr.get("secret_key", ""))
-
         self.data_dir_edit.setText(self.config.get("data_dir", ""))
 
     def _save_and_close(self):
         self.config.set("translators.baidu.app_id", self.baidu_app_id.text().strip())
         self.config.set("translators.baidu.secret_key", self.baidu_secret_key.text().strip())
-        self.config.set("ocr.baidu.api_key", self.ocr_api_key.text().strip())
-        self.config.set("ocr.baidu.secret_key", self.ocr_secret.text().strip())
         self.config.set("data_dir", self.data_dir_edit.text().strip())
 
         for key, value in self._modified_hotkeys.items():
             self.config.set(f"hotkeys.{key}", value)
 
         self.translator_manager.refresh_credentials()
-        self.ocr_engine.api_key = self.ocr_api_key.text().strip()
-        self.ocr_engine.secret_key = self.ocr_secret.text().strip()
 
         show_modal(self, QMessageBox.Information, "提示", "设置已保存！")
         self.settings_saved.emit()
@@ -491,8 +448,3 @@ class SettingsWindow(QDialog):
         else:
             show_modal(self, QMessageBox.Information, "测试成功", f"翻译结果: hello → {result}")
 
-    def _test_ocr(self):
-        show_modal(
-            self, QMessageBox.Information, "提示",
-            "OCR 功能需要上传真实图片测试。\n请在截图翻译中实际使用以验证配置。"
-        )

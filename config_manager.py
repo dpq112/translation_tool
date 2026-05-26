@@ -16,7 +16,6 @@ class ConfigManager:
                 "baidu": {"app_id": "", "secret_key": "", "enabled": False},
                 "google": {"enabled": True},
             },
-            "ocr": {"baidu": {"api_key": "", "secret_key": "", "enabled": False}},
             "default_engine": "google",
             "source_lang": "auto",
             "target_lang": "en",

@@ -89,13 +89,6 @@ class MiniWindow(QWidget):
         self.pin_btn.clicked.connect(self._toggle_pin)
         title_bar.addWidget(self.pin_btn)
 
-        self.min_btn = QPushButton("─")
-        self.min_btn.setObjectName("miniSettingsBtn")
-        self.min_btn.setToolTip("最小化")
-        self.min_btn.setFixedSize(28, 28)
-        self.min_btn.clicked.connect(lambda: self.showMinimized())
-        title_bar.addWidget(self.min_btn)
-
         self.close_btn = QPushButton("✕")
         self.close_btn.setObjectName("miniCloseBtn")
         self.close_btn.setFixedSize(28, 28)

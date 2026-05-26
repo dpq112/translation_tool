@@ -6,7 +6,7 @@ from ctypes import wintypes
 from PySide6.QtCore import QObject, Signal, QAbstractNativeEventFilter, Qt
 from PySide6.QtWidgets import QApplication, QWidget
 
-user32 = ctypes.windll.user32
+user32 = ctypes.WinDLL("user32", use_last_error=True)
 
 WM_HOTKEY = 0x0312
 MOD_ALT = 0x0001
