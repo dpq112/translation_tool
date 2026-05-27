@@ -31,8 +31,8 @@ class WindowsOCR(BaseOCR):
             stream = InMemoryRandomAccessStream()
             writer = DataWriter(stream.get_output_stream_at(0))
             writer.write_bytes(bytes(image_bytes))
-            writer.store_async()
-            writer.flush_async()
+            writer.store_async().get()
+            writer.flush_async().get()
 
             decoder = BitmapDecoder.create_async(stream).get()
             bitmap = decoder.get_software_bitmap_async().get()

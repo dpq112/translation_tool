@@ -53,14 +53,17 @@ def check_hotkey_available(hotkey_str):
     dummy.winId()
     hwnd = int(dummy.winId())
 
-    test_id = 0xFFFE
-    ok = user32.RegisterHotKey(hwnd, test_id, mods, vk)
-    if ok:
-        user32.UnregisterHotKey(hwnd, test_id)
-        return True, None
-    else:
-        err = ctypes.get_last_error()
-        return False, f"快捷键已被占用 (系统错误码: {err})"
+    try:
+        test_id = 0xFFFE
+        ok = user32.RegisterHotKey(hwnd, test_id, mods, vk)
+        if ok:
+            user32.UnregisterHotKey(hwnd, test_id)
+            return True, None
+        else:
+            err = ctypes.get_last_error()
+            return False, f"快捷键已被占用 (系统错误码: {err})"
+    finally:
+        dummy.deleteLater()
 
 
 def _parse_hotkey(hotkey_str):

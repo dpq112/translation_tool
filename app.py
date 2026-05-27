@@ -412,12 +412,12 @@ class App(QObject):
         if not engine.is_available():
             show_modal(
                 None, QMessageBox.Warning,
-                "OCR 未配置",
-                "请先在设置中配置百度 OCR API Key 后再使用截图翻译功能。",
+                "OCR 不可用",
+                "Windows 系统 OCR 初始化失败，请确认系统已安装中文语言包。",
             )
             self.tray_icon.showMessage(
                 "翻译工具",
-                "请在设置中配置百度 OCR API Key（与百度翻译使用不同服务）",
+                "Windows OCR 不可用，请在系统设置中安装中文语言包",
                 QSystemTrayIcon.MessageIcon.Warning,
                 3000,
             )
